@@ -7,8 +7,12 @@ def average(x):
     return sum(x) / len(x)
 
 
-def normalize(x):
+def mean_normalize(x):
     return (x - average(x)) / (max(x) - min(x))
+
+
+def mean_reverse(theta, x):
+    return 1 / ((theta - average(x)) / (max(x) - min(x)))
 
 
 def predict(theta0, theta1, x):
@@ -35,6 +39,36 @@ def gradient_descent(theta0, theta1, x, y, alpha=0.01, cycle=10000):
     return theta0, theta1, cost_history
 
 
+def cost_history_display(figure, cost_history):
+    cycles = list(range(len(cost_history)))
+
+    axes = figure.add_subplot(2, 1, 1)
+    axes.set_xlabel('iteration')
+    axes.set_ylabel('cost')
+    axes.set_title('Cost history')
+    
+    axes.plot(cycles, cost_history, color='green')
+
+
+def linear_regression_display(figure, columns, x, y, theta0, theta1):
+    axes = figure.add_subplot(2, 1, 2)
+    axes.set_xlabel(columns[0])
+    axes.set_ylabel(columns[1])
+    axes.set_title('Prediction of car price given their mileages')
+
+    axes.scatter(x, y, label='Scatter Plot', color='red')
+    axes.plot(x, predict(theta0, theta1, norm_x), label='Regression Line')
+    axes.legend()
+
+
+def create_displayer():
+    figure = plt.figure('Linear Regression', figsize=(10, 10))
+    plt.gcf().subplots_adjust(left=0.09, bottom=0.07,
+                              right=0.96, top=0.96, wspace=0, hspace=0.25)
+
+    return figure
+
+
 if __name__ == "__main__":
     data = pd.read_csv('data.csv')
     columns = data.columns.values[:2]
@@ -42,30 +76,13 @@ if __name__ == "__main__":
     x = np.array(data[columns[0]].values)
     y = np.array(data[columns[1]].values)
 
-    norm_x = normalize(x)
-    norm_y = normalize(y)
+    norm_x = mean_normalize(x)
+    norm_y = mean_normalize(y)
 
     theta0, theta1, cost_history = gradient_descent(0, 0, norm_x, norm_y)
-    print(theta0)
-    print(theta1)
 
-    figure = plt.figure('Linear Regression', figsize=(10, 10))
-    plt.gcf().subplots_adjust(left=0.09, bottom=0.07,
-                              right=0.96, top=0.96, wspace=0, hspace=0.25)
-
-    axes = figure.add_subplot(2, 1, 1)
-    axes.set_xlabel('iteration')
-    axes.set_ylabel('cost')
-    axes.set_title('Cost history')
-    cycles = list(range(len(cost_history)))
-    axes.plot(cycles, cost_history, color='green')
-
-    axes = figure.add_subplot(2, 1, 2)
-    axes.set_xlabel(columns[0])
-    axes.set_ylabel(columns[1])
-    axes.set_title('Prediction of car price given their mileages')
-    axes.scatter(norm_x, norm_y, label='Scatter Plot', color='red')
-    axes.plot(norm_x, predict(theta0, theta1, norm_x), label='Regression Line')
-    axes.legend()
+    figure = create_displayer()
+    cost_history_display(figure, cost_history)
+    linear_regression_display(figure, columns, norm_x, norm_y, theta0, theta1)
 
     plt.show()
