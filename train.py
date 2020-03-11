@@ -91,6 +91,7 @@ def linear_regression_display(figure, columns, x, y, theta0, theta1):
 
 
 def train(data):
+    print("Start training...")
     # Entries
     columns = data.columns.values[:2]
     x = np.array(data[columns[0]].values)
@@ -99,6 +100,7 @@ def train(data):
     norm_x = mean_normalize(x)
     theta0, theta1 = gradient_descent(0, 0, norm_x, y)
     theta0, theta1 = mean_reverse(theta0, theta1, x)
+    print("Ended !")
     return x, y, theta0, theta1
 
 
@@ -128,6 +130,16 @@ def save(theta0, theta1):
     with open('snapshot.txt', 'w') as outfile:
         json.dump(snapshot, outfile)
 
+def error_percentage(x, y, theta0, theta1):
+    prediction = predict(theta0, theta1, x)
+    total_prediction = len(prediction)
+    error = 0.0
+    for i in range(total_prediction):
+        error += abs(prediction[i] - y[i]) / y[i]
+    percentage = error / total_prediction * 100
+    print(f"Error percentage is {percentage}")
+     
+
 def main():
     # Parsing
     try:
@@ -141,6 +153,9 @@ def main():
     # Display
     if "-c" in sys.argv or "-v" in sys.argv or "-l" in sys.argv or "-h" in sys.argv:
         display(data, x, y, theta0, theta1)
+
+    if "-e" in sys.argv:
+        error_percentage(x, y, theta0, theta1)
 
 
 if __name__ == "__main__":
