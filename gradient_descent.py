@@ -41,14 +41,21 @@ def plot_dataset(x, y, theta):
     plt.scatter(x, y, color="g")
     plt.xlabel("Mileages")
     plt.ylabel("Prices")
-        # if "-error" in sys.argv:
-        #     plt.text(
-        #         150000, 8000,
-        #         f"Estimated error: {estimate_error_percent(x, y, theta)}%",
-        #         bbox=dict(facecolor="lightblue", alpha=0.5)
-        #     )
     plt.show()
 
+
+
+
+def unscale_theta(theta_0, theta_1, x):
+    """
+    "Unscales" the theta found.
+    If we don't unscale it, predictions will be kinda wrong cause scaled down.
+    """
+    x_avg = sum(x) / len(x)
+    x_range = max(x) - min(x)
+    theta_0 = theta_0 - theta_1 * x_avg / x_range
+    theta_1 = theta_1 / (max(x) - min(x))
+    return [theta_0, theta_1]
 
 #Import CSV with pandas
 data = pd.read_csv("data.csv")
@@ -56,42 +63,25 @@ print(data.shape)
 print(data)
 
 #Get X and Y
-X_raw = data["km"].values
-Y_raw = data["price"].values
+X = data["km"].values
+Y = data["price"].values
 
-X = preprocessing.scale(X_raw)
-Y = preprocessing.scale(Y_raw)
+#Rescale Data
+x_avg = np.sum(X) / len(X)
+x_range = np.max(X) - np.min(X)
+#Center at 0
+X_rs = X - x_avg
+#get range to [-1 : 1]
+X_rs = X_rs / x_range
+
 
 #X = np.array([1,2,3,4,5])
 #Y = np.array([5,7,9,11,13])
 
 theta = [0.0, 0.0]
+theta[0], theta[1] = gradient_descent(X_rs, Y)
 
-theta[0], theta[1] = gradient_descent(X, Y)
-
-theta[0] = theta[0] * np.var(Y_raw) + np.mean(Y_raw)
-theta[1] = theta[1] * np.var(Y_raw) / np.var(X_raw)
-
-print(theta[0])
-print(theta[1])
-plot_dataset(X_raw, Y_raw, theta)
-
-#Plot
-
-
-# max_x = np.max(X)
-# min_x = np.min(X)
-
-# print ("minX {}, maxX {}, minY {}, maxY {}".format(min_x, max_x, np.min(Y), np.max(Y)))
-
-# potit_x = np.linspace(min_x, max_x, 1000)
-# potit_y = b + m * potit_x
-
-# plt.plot(potit_x, potit_y, color= "#58b970", label="Regression Line")
-# plt.scatter(X, Y, c="#ef5423", label="Scatter Plot")
-
-# plt.xlabel("km")
-# plt.ylabel("price")
-
-# plt.legend()
-# plt.show()
+print(theta)
+theta = unscale_theta(theta[0], theta[1], X)
+print(theta)
+plot_dataset(X, Y, theta)
