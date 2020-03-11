@@ -1,4 +1,5 @@
 import sys
+import json
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -6,11 +7,14 @@ import matplotlib.pyplot as plt
 g_cost_history = []
 g_theta_history = []
 
+
 def average(x):
     return sum(x) / len(x)
 
+
 def extremum_sub(x):
     return max(x) - min(x)
+
 
 def mean_normalize(x):
     return (x - average(x)) / extremum_sub(x)
@@ -33,7 +37,7 @@ def cost(theta0, theta1, x, y):
     return cost
 
 
-def gradient_descent(theta0, theta1, x, y, alpha=0.1, cycle=1000, step=20):
+def gradient_descent(theta0, theta1, x, y, alpha=0.1, cycle=1000, step=10):
     m = len(x)
     for i in range(cycle):
         prediction = predict(theta0, theta1, x)
@@ -50,7 +54,7 @@ def gradient_descent(theta0, theta1, x, y, alpha=0.1, cycle=1000, step=20):
 def cost_history_display(figure):
     cycles = list(range(len(g_cost_history)))
     # Split
-    if "-v" in sys.argv:
+    if "-v" in sys.argv or "-l" in sys.argv or "-h" in sys.argv:
         axes = figure.add_subplot(2, 1, 1)
     else:
         axes = figure.add_subplot(1, 1, 1)
@@ -76,20 +80,14 @@ def linear_regression_display(figure, columns, x, y, theta0, theta1):
     axes.scatter(x, y, label='Scatter Plot', color='blue')
     # Regression Line
     if "-l" in sys.argv:
-        axes.plot(x, predict(theta0, theta1, x), label='Regression Line', color='#840606')
+        axes.plot(x, predict(theta0, theta1, x),
+                  label='Regression Line', color='#840606')
     # Regression evolution
     if "-h" in sys.argv:
         for theta in g_theta_history:
             theta0, theta1 = mean_reverse(theta[0], theta[1], x)
             axes.plot(x, predict(theta0, theta1, x), color='#84060688')
     axes.legend()
-
-
-def create_displayer():
-    figure = plt.figure('Linear Regression', figsize=(10, 10))
-    plt.gcf().subplots_adjust(left=0.09, bottom=0.07,
-                              right=0.96, top=0.96, wspace=0, hspace=0.25)
-    return figure
 
 
 def train(data):
@@ -103,16 +101,32 @@ def train(data):
     theta0, theta1 = mean_reverse(theta0, theta1, x)
     return x, y, theta0, theta1
 
+
+def create_displayer():
+    figure = plt.figure('Linear Regression', figsize=(10, 10))
+    plt.gcf().subplots_adjust(left=0.09, bottom=0.07,
+                              right=0.96, top=0.96, wspace=0, hspace=0.25)
+    return figure
+
+
 def display(data, x, y, theta0, theta1):
     figure = create_displayer()
     # Cost Evolution
     if "-c" in sys.argv:
         cost_history_display(figure)
     # Graph
-    if "-v" or "-l" or "-h" in sys.argv:
+    if "-v" in sys.argv or "-l" in sys.argv or "-h" in sys.argv:
         columns = data.columns.values[:2]
         linear_regression_display(figure, columns, x, y, theta0, theta1)
     plt.show()
+
+def save(theta0, theta1):
+    snapshot = {
+        "theta0": theta0,
+        "theta1": theta1
+    }
+    with open('snapshot.txt', 'w') as outfile:
+        json.dump(snapshot, outfile)
 
 def main():
     # Parsing
@@ -123,8 +137,9 @@ def main():
         return -1
     # Training
     x, y, theta0, theta1 = train(data)
+    save(theta0, theta1)
     # Display
-    if "-c" or "-v" or "-l" or "-h" in sys.argv:
+    if "-c" in sys.argv or "-v" in sys.argv or "-l" in sys.argv or "-h" in sys.argv:
         display(data, x, y, theta0, theta1)
 
 
