@@ -1,12 +1,44 @@
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-from sklearn import preprocessing
 
 
-#plt.rcParams['figure.figsize'] = (10.0, 10.0)
+def get_vectors_from_csv(filename):
+    """
+    Retrieve the km and the price row and assign and return it
+    """
+    
+    #Import CSV with pandas
+    data = pd.read_csv(filename)
+
+    #Get X and Y
+    Xrow = data["km"].values
+    Yrow = data["price"].values
+    return Xrow, Yrow
+
+
+def rescale_vector(vector):
+    """
+    Reshape the vector to get his mean at 0 and his range between -1 and 1
+    """
+    
+    #Get average and range
+    vector_avg = np.sum(vector) / len(vector)
+    vector_range = np.max(vector) - np.min(vector)
+    
+    #Center at 0
+    vector = vector - vector_avg
+    #get range to [-1 : 1]
+    vector = vector / vector_range
+    
+    return vector
+
 
 def gradient_descent(X, Y):
+    """
+    Perform a gradient descent between the input X and the output Y
+    """
+    
     m = 0
     b = 0
     n = len(X)
@@ -22,28 +54,7 @@ def gradient_descent(X, Y):
         b = b - alpha * bd
     print("m {}, b {}, cost {}, iteration {}".format(m, b, cost, i))
     
-    return b, m
-
-
-def plot_dataset(x, y, theta):
-    """
-    Plots the dataset from x and y.
-    If plot_model is set to True, also plot the trained model.
-    """
-
-
-    plt.figure("Prices of cars given their mileages")
-
-    for i in x:
-        print(i)
-
-    plt.plot(x, [(theta[0] + theta[1] * i) for i in x], color="r")
-    plt.scatter(x, y, color="g")
-    plt.xlabel("Mileages")
-    plt.ylabel("Prices")
-    plt.show()
-
-
+    return [b, m]
 
 
 def unscale_theta(theta_0, theta_1, x):
@@ -51,37 +62,43 @@ def unscale_theta(theta_0, theta_1, x):
     "Unscales" the theta found.
     If we don't unscale it, predictions will be kinda wrong cause scaled down.
     """
+
     x_avg = sum(x) / len(x)
     x_range = max(x) - min(x)
     theta_0 = theta_0 - theta_1 * x_avg / x_range
     theta_1 = theta_1 / (max(x) - min(x))
     return [theta_0, theta_1]
 
-#Import CSV with pandas
-data = pd.read_csv("data.csv")
-print(data.shape)
-print(data)
-
-#Get X and Y
-X = data["km"].values
-Y = data["price"].values
-
-#Rescale Data
-x_avg = np.sum(X) / len(X)
-x_range = np.max(X) - np.min(X)
-#Center at 0
-X_rs = X - x_avg
-#get range to [-1 : 1]
-X_rs = X_rs / x_range
 
 
-#X = np.array([1,2,3,4,5])
-#Y = np.array([5,7,9,11,13])
+def plot_dataset(x, y, theta):
+    """
+    Plots the dataset from x and y.
+    """
 
-theta = [0.0, 0.0]
-theta[0], theta[1] = gradient_descent(X_rs, Y)
+    plt.figure("Prices of cars given their mileages")
+    plt.plot(x, [(theta[0] + theta[1] * i) for i in x], color="r")
+    plt.scatter(x, y, color="g")
+    plt.xlabel("Mileages")
+    plt.ylabel("Prices")
+    plt.show()
 
-print(theta)
-theta = unscale_theta(theta[0], theta[1], X)
-print(theta)
-plot_dataset(X, Y, theta)
+
+def main():
+    """
+    Main function
+    """
+
+    #Extract vectors from csv
+    X, Y = get_vectors_from_csv("data.csv")
+
+    theta = [0.0, 0.0]
+    #Rescale X because his range is too wide
+    theta = gradient_descent(rescale_vector(X), Y)
+    #Unscale the theta to make it valid for the real values
+    theta = unscale_theta(theta[0], theta[1], X)
+
+    plot_dataset(X, Y, theta)
+
+if __name__ == "__main__":
+    main()
