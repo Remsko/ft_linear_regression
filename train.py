@@ -11,8 +11,10 @@ def mean_normalize(x):
     return (x - average(x)) / (max(x) - min(x))
 
 
-def mean_reverse(theta, x):
-    return 1 / ((theta - average(x)) / (max(x) - min(x)))
+def mean_reverse(theta0, theta1, x):
+    theta0 = theta0 - theta1 * average(x) / (max(x) - min(x))
+    theta1 = theta1 /(max(x) - min(x))
+    return theta0, theta1
 
 
 def predict(theta0, theta1, x):
@@ -57,7 +59,7 @@ def linear_regression_display(figure, columns, x, y, theta0, theta1):
     axes.set_title('Prediction of car price given their mileages')
 
     axes.scatter(x, y, label='Scatter Plot', color='red')
-    axes.plot(x, predict(theta0, theta1, norm_x), label='Regression Line')
+    axes.plot(x, predict(theta0, theta1, x), label='Regression Line')
     axes.legend()
 
 
@@ -77,12 +79,12 @@ if __name__ == "__main__":
     y = np.array(data[columns[1]].values)
 
     norm_x = mean_normalize(x)
-    norm_y = mean_normalize(y)
 
-    theta0, theta1, cost_history = gradient_descent(0, 0, norm_x, norm_y)
+    theta0, theta1, cost_history = gradient_descent(0, 0, norm_x, y)
+    theta0, theta1 = mean_reverse(theta0, theta1, x)
 
     figure = create_displayer()
     cost_history_display(figure, cost_history)
-    linear_regression_display(figure, columns, norm_x, norm_y, theta0, theta1)
+    linear_regression_display(figure, columns,x, y, theta0, theta1)
 
     plt.show()
